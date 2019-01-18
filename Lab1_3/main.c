@@ -31,12 +31,40 @@ void wdtInit() {
     SFRIE1 |= WDTIE;
 }
 
+// TASKS
+
+void task1() {
+    P1DIR |= BIT0;
+    volatile uint16_t delay;
+
+    while(1) {
+        delay = 10000;
+        while(delay--);
+        P1OUT ^= BIT0;
+    }
+}
+
+void task2() {
+    P4DIR |= BIT7;
+    volatile uint16_t delay;
+
+    while(1) {
+        delay = 10000;
+        while(delay--);
+        P4OUT ^= BIT7;
+    }
+}
+
+// END TASKS
+
 /**
  * main.c
  */
 int main(void)
 {
 	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
+	register_task(task1);
+	register_task(task2);
 	startERTOS();
 	return 0;
 }
@@ -47,12 +75,12 @@ void register_task(process entry_point) {
     current->stack_ptr = next_sp;
     next_sp += (0x80 / sizeof(uint16_t));
     uint32_t pc = (uint32_t)entry_point;
-    *(--current->stack_ptr) = (uint16_t)((pc & 0xf0000) >> 4 | GIE);
     *(--current->stack_ptr) = (uint16_t)(pc & 0xffff);
-    current->stack_ptr -= 12;
+    *(--current->stack_ptr) = (uint16_t)(((pc & 0xf0000) >> 4) | GIE);
+    current->stack_ptr -= 24;
 }
 
-void scheduler() {
+inline void scheduler() {
     running_task++;
     if (running_task >= task_count) {
         running_task = 0;
@@ -69,14 +97,20 @@ void dispatcher() {
     asm("movx.a  SP, %0" : "=m" (scheduler_sp));
     asm("movx.a  %0, SP" :: "m" (tasks[running_task].stack_ptr));
     asm("popm.a  #12, R15");
+    asm("reti");
 }
 
+__attribute__((naked))
 void startERTOS() {
     clockInit();
 
-    tasks[running_task].stack_ptr += 12;
-    //TODO: update PC value
-
     wdtInit();
     __enable_interrupt();
+
+    asm("movx.a  %0, SP" :: "m" (tasks[running_task].stack_ptr));
+    asm("popm.a  #12, R15");
+    asm("reti");
+
 }
+
+
