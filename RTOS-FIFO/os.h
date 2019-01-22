@@ -36,3 +36,7 @@ void fifoPut(fifo *f, task *t);
 
 void scheduler();
 
+task* findAvailableTask();
+
+void initTasks();
+
