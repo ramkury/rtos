@@ -3,8 +3,7 @@
 #include "os.h"
 
 void idle() {
-    //TODO: sleeping beauty
-    while(1);
+    __bis_SR_register(LPM3_bits | GIE); // Enter low-power mode
 }
 
 void task1() {
