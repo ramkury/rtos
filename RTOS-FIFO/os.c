@@ -51,7 +51,7 @@ task* findAvailableTask() {
     return 0;
 }
 
-void initTasks() {
+void initTasks() { // prepare task vector - allocate stacks
     uint16_t * stack_ptr = (uint16_t*)0x2880;
     uint8_t i;
     for(i = 0; i < MAX_TASKS * PRIORITIES; ++i) {
@@ -84,6 +84,7 @@ void scheduler() {
         fifoPut(&fifos[running_task->status], running_task);
     }
 
+    // get new task
     uint8_t i;
     for(i = 2; i >= 0; --i) {
         if(fifos[i].count != 0) {
@@ -132,6 +133,6 @@ void startERTOS() {
 }
 
 void exitOS() {
-    running_task->status |= (1 << 7);
+    running_task->status |= (1 << 7); // set the finished bit
     while(1);
 }
