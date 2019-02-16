@@ -3,14 +3,14 @@
  */
 /* XDCtools Header files */
 #include <xdc/std.h>
-#include <msp430.h>
+//#include <msp430.h>
 #include <xdc/cfg/global.h>
 #include <xdc/runtime/Log.h>
 
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
-#include <ti/sysbios/knl/Clock.h>
+//#include <ti/sysbios/knl/Clock.h>
 #include <ti/sysbios/knl/Semaphore.h>
 
 /* TI-RTOS Header files */
@@ -22,16 +22,22 @@
 
 int16_t globalVar = 20;
 
-void readerFunc(UArg arg0){
-    int16_t val = globalVar;
-    Log_info2("Reader %d - %d", arg0, val);
+void readerFunc(UArg arg0, UArg arg1){
+    while(1){
+        int16_t val = globalVar;
+        Log_info2("Reader %d - %d", arg0, val);
+        Task_sleep(100);
+    }
 }
 
-void writerFunc(UArg arg0){
-    Semaphore_pend(semaphore0, BIOS_WAIT_FOREVER);
-    globalVar = arg0 ? globalVar + 1 : globalVar - 1;
-    Log_info2("Writer %d - %d", arg0,globalVar);
-    Semaphore_post(semaphore0);
+void writerFunc(UArg arg0, UArg arg1){
+    while(1){
+        Semaphore_pend(semaphore0, BIOS_WAIT_FOREVER);
+        globalVar = arg0 ? globalVar + 1 : globalVar - 1;
+        Log_info2("Writer %d - %d", arg0,globalVar);
+        Semaphore_post(semaphore0);
+        Task_sleep(110);
+    }
 }
 
 int main(void)
